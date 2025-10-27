@@ -93,7 +93,7 @@ teacher_evals_clean <- evals |>
 -   Numeric Example 2
 
 ```{r}
-#| label: wd-3-numeric-ex-1
+#| label: wd-3-numeric-ex-2
 # Lab 5
 final_suspect <- person |>
   filter(id == "99716")
@@ -217,14 +217,14 @@ ca_childcare <- ca_childcare |>
 
 ```{r}
 #| label: wd-5-left-ex-1
-
+ 
 ```
 
 -   `right_join()` Example 1
 
 ```{r}
 #| label: wd-5-right
-
+ 
 ```
 
 -   `left_join()` **or** `right_join()` Example 2
