@@ -40,7 +40,15 @@ evals <- read_csv(here::here("week 3", "lab 3", "teacher_evals.csv"))
 
 ```{r}
 #| label: wd-1-xlsx
-# haven't done this yet
+# PA 4 Data Import
+library(tidyverse)
+library(readxl)
+military <- read_xlsx("gov_spending_per_capita.xlsx",
+                      sheet = "Share of Govt. spending",
+                      skip  = 7,
+                      n_max = 190,
+                      na = c(". .", "xxx", "..")
+                      )
 ```
 
 **WD-2: I can select necessary columns from a dataset.**
@@ -59,6 +67,25 @@ teacher_evals_clean |>
 
 ```{r}
 #| label: wd-2-ex-2
+# Lab 7 Question 3
+fish |>
+  group_by(year, section, trip) |>
+  summarise(across(everything(), ~sum(is.na(.x)))) |>
+  ungroup() |>
+  pivot_longer(
+    -c(year, section, trip),
+    names_to = "variable",
+    values_to = "number_of_missing_values") |>
+  filter(number_of_missing_values > 0) |>
+  ggplot(mapping = aes(x = as.factor(trip), y = number_of_missing_values, fill = variable)) +
+  geom_col() +
+  facet_grid(year ~ section)+
+  labs(
+    x = "Trip",
+    y = "Number of Missing Values",
+    fill = "Variable",
+    title = "Frequency and Missing Data Patterns by Year, Section, and Trip"
+  )
 
 ```
 
@@ -94,9 +121,14 @@ teacher_evals_clean <- evals |>
 
 ```{r}
 #| label: wd-3-numeric-ex-2
-# Lab 5
-final_suspect <- person |>
-  filter(id == "99716")
+# Lab 7 Question 2
+fish |>
+  summarise(across(everything(), ~sum(is.na(.x)))) |>
+  pivot_longer(
+    everything(),
+    names_to = "variable",
+    values_to = "number_of_missing_values") |>
+  filter(number_of_missing_values > 0)
 ```
 
 -   Character Example 1 (any context)
@@ -124,11 +156,11 @@ gym_person <- joint_data2 |>
 
 ```{r}
 #| label: wd-3-date
-# Lab 5
-crime_scene_report <- crime_scene_report |>
-  filter(date == ("20180115"),
-         city == ("SQL City"),
-         type == ("murder"))
+# Lab 5 (Revised so the date is a date and not a string)
+  crime_scene_report <- crime_scene_report |>
+    filter(date == ymd("20180115"),
+           city == ("SQL City"),
+           type == ("murder"))
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -137,6 +169,20 @@ crime_scene_report <- crime_scene_report |>
 
 ```{r}
 #| label: wd-4-numeric-ex-1
+# Lab 10 Question 2
+results |> 
+  enframe(name = NULL, value = "correct_babies") |>     
+  count(correct_babies) |>                                
+  mutate(proportion = n / sum(n)) |>               
+  gt() |>                                         
+  fmt_percent(                                     
+    columns = proportion,
+    decimals = 2
+  ) |> 
+  tab_header(
+    title = "Proportion of Correct Baby Returns in 10000 Simulations"
+  )
+
 
 ```
 
@@ -144,6 +190,10 @@ crime_scene_report <- crime_scene_report |>
 
 ```{r}
 #| label: wd-4-numeric-ex-2
+#challenge 7 question 1
+
+fish <- fish|>
+  mutate(length_cm = length/10)
 
 ```
 
@@ -151,25 +201,6 @@ crime_scene_report <- crime_scene_report |>
 
 ```{r}
 #| label: wd-4-factor-ex-1
-# Lab $ Question 7 
-plot <- ca_childcare |>
-  pivot_longer(cols = c(mfcc_infant,
-                        mfcc_toddler,
-                        mfcc_preschool),
-              names_to = "age_group",
-              values_to = "price") |>
-  mutate(age_group = case_when(
-    age_group == "mfcc_infant" ~ "Infant",
-    age_group == "mfcc_toddler" ~ "Toddler",
-    age_group == "mfcc_preschool" ~ "Preschool"),
-    age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool")),
-    region = fct_reorder2(region, study_year, price))
-```
-
--   Factor Example 2 (reordering levels)
-
-```{r}
-#| label: wd-4-factor-ex-2
 # Lab 4 Question 4
 ca_childcare <- ca_childcare |> 
   mutate(county_name = str_remove(county_name, " County"),
@@ -197,10 +228,47 @@ ca_childcare <- ca_childcare |>
     "North Coast"))
 ```
 
+-   Factor Example 2 (reordering levels)
+
+```{r}
+#| label: wd-4-factor-ex-2
+# Lab 4 Question 7 
+plot <- ca_childcare |>
+  pivot_longer(cols = c(mfcc_infant,
+                        mfcc_toddler,
+                        mfcc_preschool),
+              names_to = "age_group",
+              values_to = "price") |>
+  mutate(age_group = case_when(
+    age_group == "mfcc_infant" ~ "Infant",
+    age_group == "mfcc_toddler" ~ "Toddler",
+    age_group == "mfcc_preschool" ~ "Preschool"),
+    age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool")),
+    region = fct_reorder2(region, study_year, price))
+
+```
+
 -   Character (example must use functions from **stringr**)
 
 ```{r}
 #| label: wd-4-string
+# Lab 8 Question 3
+plot_function <- function(df, x, y) {
+  
+  
+  ggplot(df, aes(x = {{ x }}, y = {{ y }}, color = {{ y }})) +
+    geom_point() +
+    labs(
+      x = str_replace_all(rlang::as_label(rlang::enquo(x)),  "_", " "),
+      y = str_replace_all(rlang::as_label(rlang::enquo(y)),  "_", " "),
+      title = paste("Relationship between",
+                    str_replace_all(rlang::as_label(rlang::enquo(x)),  "_", " "),
+                    "and",
+                    str_replace_all(rlang::as_label(rlang::enquo(y)),  "_", " ")),
+      color = str_replace_all(rlang::as_label(rlang::enquo(y)),  "_", " ")
+      )
+   
+}
 
 ```
 
@@ -208,7 +276,12 @@ ca_childcare <- ca_childcare |>
 
 ```{r}
 #| label: wd-4-date
-
+# Lab 5 (Revised to mutate and then filter date)
+crime_scene_report <- crime_scene_report |>
+  mutate(date = ymd(date)) |>
+  filter(date == "2018-01-15",
+         city == "SQL City",
+         type == "murder")
 ```
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
@@ -217,21 +290,44 @@ ca_childcare <- ca_childcare |>
 
 ```{r}
 #| label: wd-5-left-ex-1
- 
+# Lab 5 (Revised to change inner_join() to left_join())
+drivers_license |>
+  left_join(person, by = join_by("id" == "license_id")) |>
+  left_join(facebook_event_checkin, by = join_by("id.y" == "person_id")) |>
+  filter(car_make == "Tesla",
+         car_model == "Model S",
+         hair_color == "red",
+         gender == "female", 
+         event_name == "SQL Symphony Concert") |>
+  select(id.y)
 ```
 
 -   `right_join()` Example 1
 
 ```{r}
 #| label: wd-5-right
- 
+# Lab 4 Question 3 (Revised to use a right_join())
+ca_childcare <- ca_childcare |>
+  right_join(
+    tax_rev,
+    by = join_by(county_name == entity_name, study_year == year)
+  )
 ```
 
 -   `left_join()` **or** `right_join()` Example 2
 
 ```{r}
 #| label: wd-5-left-right-ex-2
-
+# Lab 5 (Revised to change inner_join() to left_join())
+get_fit_now_member |>
+  left_join(person, join_by("person_id" == "id")) |>
+  left_join(drivers_license, by = join_by("license_id" == "id")) |>
+  filter(
+    membership_status == "gold",
+    str_detect(id, "^48Z"),
+    str_detect(plate_number, "H42W")
+  ) |>
+  select(name.x, person_id)
 ```
 
 -   `inner_join()` Example 1
@@ -260,14 +356,23 @@ hire_joint <- inner_join(drivers_license, person, by = join_by("id" == "license_
 
 ```{r}
 #| label: wd-6-semi
-
+# Lab 5 (Revised to use a semi_join())
+interview |>
+  semi_join(
+    person |> filter(address_street_name == "Franklin Ave",
+                     str_detect(name, "^Annabel")),
+    by = join_by(person_id == id)
+  ) |>
+  pull(transcript)
 ```
 
 -   `anti_join()`
 
 ```{r}
 #| label: wd-6-anti
-
+# Lab 5 Revised code to check to see who didn't go to the concert to check suspect. 
+person |> 
+  anti_join(facebook_event_checkin, by = join_by(id == person_id))
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
@@ -356,7 +461,23 @@ med_income <- ca_childcare |>
 
 ```{r}
 #| label: r-2-3
-# haven't done this yet
+# Lab 8 Question 4
+style_plot <- function(plot, theme_fn = theme_bw(), palette = RColorBrewer::brewer.pal(8, "Accent"), aesthetic = "fill") {
+  
+  if (!aesthetic %in% c("color", "fill")) {
+    stop()
+  }
+
+  styled_plot <- plot + theme_fn
+  
+  if (aesthetic == "color") {
+    styled_plot <- styled_plot + scale_color_manual(values = palette)
+  } else {
+    styled_plot <- styled_plot + scale_fill_manual(values = palette)
+  }
+  
+  return(styled_plot)
+}
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
@@ -365,6 +486,21 @@ med_income <- ca_childcare |>
 
 ```{r}
 #| label: r-3-example
+#Lab 7 Question 4
+rescale_01 <- function(x){
+  
+  if (!is.numeric(x)) {
+    stop()
+  }
+  
+  if (length(x) <= 1) {
+    stop()
+  }
+
+  y <- range(x, na.rm = TRUE)
+  
+  x = (x -y[1]) / (y[2] - y[1])
+}
 
 ```
 
@@ -372,7 +508,22 @@ med_income <- ca_childcare |>
 
 ```{r}
 #| label: r-3-function-stops
-# haven't done this yet
+# Challenge 7 Question 2
+change_impossible_measurements <- function(v, min_value, max_value) {
+  if (!is.numeric(v)) {
+    stop()}
+
+  if (!is.numeric(min_value) || !is.numeric(max_value)) {
+    stop()}
+
+  if (min_value > max_value) {
+    stop()}
+  
+  case_when(
+    v < min_value ~ NA,
+    v > max_value ~ NA,
+    TRUE ~ v)
+}
 ```
 
 ## Data Visualization & Summarization
@@ -399,27 +550,63 @@ ggplot(ca_childcare, aes(x = mhi_2018,
 
 ```{r}
 #| label: dvs-2-num-cat
-# Lab 2 Question 16
+# Lab 2 Question 16 (revised)
 ggplot(data = surveys,
-       mapping = aes( x = weight, y = species)) +
+       mapping = aes( x = species, y = weight)) +
   geom_jitter(height = 0.25, color = "darkgreen", alpha = 0.125)+
   geom_boxplot(outlier.shape = NA)+
   labs( x = "Weight (g)", y = NULL, title = "Rodent weight by species", subtitle = "Species")+
-  theme(axis.text.x = element_text(angle = 45))
+  theme(axis.text.x = element_text(angle = 45),
+        axis.text.y = element_text(color = "black"), 
+        plot.title = element_text(face = "bold"))
 ```
 
 -   At least two categorical variables
 
 ```{r}
 #| label: dvs-2-cat
-
+# Lab 7 Question 3
+fish |>
+  group_by(year, section, trip) |>
+  summarise(across(everything(), ~sum(is.na(.x)))) |>
+  ungroup() |>
+  pivot_longer(
+    -c(year, section, trip),
+    names_to = "variable",
+    values_to = "number_of_missing_values") |>
+  filter(number_of_missing_values > 0) |>
+  ggplot(mapping = aes(x = as.factor(trip), y = number_of_missing_values, fill = variable)) +
+  geom_col() +
+  facet_grid(year ~ section)+
+  labs(
+    x = "Trip",
+    y = "Number of Missing Values",
+    fill = "Variable",
+    title = "Frequency and Missing Data Patterns by Year, Section, and Trip"
+  )
 ```
 
 -   Dates (time series plot)
 
 ```{r}
 #| label: dvs-2-date
-
+# Lab 4 Question 7
+ggplot(plot, mapping = aes(x = study_year, y = price, color = region))+
+  geom_point(alpha = 0.3, size = 1) + 
+  geom_smooth(
+    size = 0.8) +
+  facet_wrap(~ age_group, ncol = 3) +
+  labs(
+    title = "Weekly Median Price for Center_based Childcare ($)",
+    x = "Study Year",
+    y = "",
+    color = "Region")+
+  theme(
+    plot.title = element_text(size = 10),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 6),
+    legend.position = "right",
+    aspect.ratio = 1)
 ```
 
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
@@ -428,28 +615,38 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-2-ex-1
-# Challenge 2 Question 2
-ggplot(data = penguins, 
-       mapping = aes(x = bill_length_mm, y = species, color = island)
-       ) +
-  geom_boxplot() +
-  scale_color_manual(values = untitled_red) +
-  labs(x = "Bill Length (mm)", 
-       y = "", 
-       title = "Length of Different Penguin Species' Bills", 
-       subtitle = "Separated by <span style = 'color:#c8251d;'>Biscoe</span>, <span style = 'color:#a11b26;'>Dream</span> and <span style = 'color:#ef6552;'>Torgenson</span> Islands") +
+# Lab 4 Question 7
+ggplot(plot, mapping = aes(x = study_year, y = price, color = region))+
+  geom_point(alpha = 0.3, size = 1) + 
+  geom_smooth(
+    size = 0.8) +
+  facet_wrap(~ age_group, ncol = 3) +
+  labs(
+    title = "Weekly Median Price for Center_based Childcare ($)",
+    x = "Study Year",
+    y = "",
+    color = "Region")+
   theme(
-    legend.position = "none", 
-    plot.subtitle = element_markdown()
-    ) +
-  theme_bw()
+    plot.title = element_text(size = 10),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 6),
+    legend.position = "right",
+    aspect.ratio = 1)
 ```
 
 -   I can modify my colors to be accessible to anyone's eyes
 
 ```{r}
 #| label: dvs-2-ex-2
-
+# Lab 4 Question 8 (Revised to make it colorblind friendly)
+ggplot(ca_childcare, aes(x = mhi_2018, 
+                         y = mfcc_infant)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", color = "pink") +
+  labs(
+    title = "Relationship between median household income and infant childcare prices in California",
+    x = "Median household income in 2018 ($)",
+    y = "Median weekly price for infant care ($)") 
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
@@ -472,13 +669,39 @@ ggplot(ca_childcare, aes(x = mhi_2018,
 
 ```{r}
 #| label: dvs-2-ex-4
+# Challenge 4 
+plot <- ca_childcare |>
+  pivot_longer(cols = c(mcsa,mfccsa),
+              names_to = "type_of_care",
+              values_to = "price") |>
+  mutate(type_of_care = recode(type_of_care,
+                              "mfccsa" = "Family Childcare (In-home)",
+                              "mcsa" = "Center-based Care"))
 
+ggplot(plot, mapping = aes(x = type_of_care, 
+                         y = price)) +
+  geom_boxplot(alpha = 0.5, color = "darkgreen") +
+  labs(
+    title = "Comparing the California weekly full-time median price 
+for center-based childcare versus family (in-home)",
+    x = "Type of childcare",
+    y = "Full time median price ($)")+
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        axis.title.x = element_text(size = 12),  
+        axis.title.y = element_text(size = 12))
 ```
 
 -   I can reorder my legend to align with the colors in my plot
 
 ```{r}
 #| label: dvs-2-ex-5
+#Challenge 2 Question 2
+ggplot(data = surveys,
+       mapping = aes( x = weight, y = species, color = sex)) +
+  geom_jitter(height = 0.25, color = "darkgreen", alpha = 0.125)+
+  geom_boxplot(outlier.shape = NA)+
+  labs( x = "Species", y = NULL, title = "Rodent weight by species and sex", subtitle = "Weight (g)", legend = "Sex")+
+  scale_color_manual(values = c("F" = "#ff00f8", "M" = "#0060d8"))
 
 ```
 
@@ -488,11 +711,11 @@ ggplot(ca_childcare, aes(x = mhi_2018,
 
 ```{r}
 #| label: dvs-3-1-ex-1
-# Lab 4 Question 8
+# Lab 4 Question 8 (Revised to make it colorblind friendly (as Dr.T advised) and use non standard colors)
 ggplot(ca_childcare, aes(x = mhi_2018, 
                          y = mfcc_infant)) +
-  geom_point(alpha = 0.5, color = "green") +
-  geom_smooth(method = "lm", color = "pink") +
+  geom_point(alpha = 0.5, color = "#1874CD") +
+  geom_smooth(method = "lm", color = "#FF69B4") +
   labs(
     title = "Relationship between median household income and infant childcare prices in California",
     x = "Median household income in 2018 ($)",
@@ -503,10 +726,10 @@ ggplot(ca_childcare, aes(x = mhi_2018,
 
 ```{r}
 #| label: dvs-3-1-ex-2
-# Challenge 2
+# Challenge 2 (revised to use non standard colors)
 ggplot(data = surveys,
        mapping = aes( x = weight, y = species, color = sex)) +
-  geom_jitter(height = 0.25, color = "darkgreen", alpha = 0.125)+
+  geom_jitter(height = 0.25, color = "grey", alpha = 0.125)+
   geom_boxplot(outlier.shape = NA)+
   labs( x = "Species", y = NULL, title = "Rodent weight by species and sex", subtitle = "Weight (g)", legend = "Sex")+
   scale_color_manual(values = c("F" = "#ff00f8", "M" = "#0060d8"))
@@ -516,6 +739,28 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-3-2
+# Lab 10 Question 13
+binded |>
+  slice_sample(n = 100) |>
+  mutate(num = row_number()) |>
+  ggplot(aes(y = num)) +
+  geom_errorbarh(aes(xmin = ci_lower,
+                     xmax = ci_upper,
+                     color = population_slope),
+                 height = 0.3, linewidth = 0.5) +
+
+  geom_vline(xintercept = 0.5, linetype = "dashed") +  
+  scale_color_manual(values = c("TRUE" = "steelblue", "FALSE" = "red"),
+                     labels = c("TRUE" = "Contains β1", "FALSE" = "Misses β1"),
+                     name = "population slope = 0.5") +
+  labs(
+    title = "95% Confidence Intervals of Estimated Regression Slope
+for 100 Simulated Datasets",
+    subtitle = "Cl's that do not include the population slope are highlighted in red",
+    x = "Slope Coefficient Estimate",
+    y = ""
+  ) +
+  theme(legend.position = "top")
 
 ```
 
@@ -523,6 +768,15 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-3-3
+#Lab 4 Question 8
+ggplot(ca_childcare, aes(x = mhi_2018, 
+                         y = mfcc_infant)) +
+  geom_point(alpha = 0.5, color = "green") +
+  geom_smooth(method = "lm", color = "pink") +
+  labs(
+    title = "Relationship between median household income and infant childcare prices in California",
+    x = "Median household income in 2018 ($)",
+    y = "Median weekly price for infant care ($)") 
 
 ```
 
@@ -532,18 +786,28 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-4-summarize
-# Lab 3 Question 9
-teacher_evals_clean |>
-  group_by(teacher_id, course_id)|>
-  summarize(number_questions = n_distinct(question_no))|>
-  filter(number_questions ==9)
+# Lab 7 Question 2
+fish |>
+  summarise(across(everything(), ~sum(is.na(.x)))) |>
+  pivot_longer(
+    everything(),
+    names_to = "variable",
+    values_to = "number_of_missing_values") |>
+  filter(number_of_missing_values > 0)
 ```
 
 -   Example using `across()`
 
 ```{r}
 #| label: dvs-4-across
-
+# Lab 7 Question 2
+fish |>
+  summarise(across(everything(), ~sum(is.na(.x)))) |>
+  pivot_longer(
+    everything(),
+    names_to = "variable",
+    values_to = "number_of_missing_values") |>
+  filter(number_of_missing_values > 0)
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -600,6 +864,16 @@ med_income <- ca_childcare |>
 
 ```{r}
 #| label: dvs-6-ex-2
+# Lab 9 Question 3
+surveys |>
+  map_chr(typeof) |>      
+  enframe(name = "Variable", 
+          value = "Data Type") |>
+  arrange(Variable) |> 
+  kable(
+    caption = "Classes of Variables in the surveys Dataset in alphabetical order",
+    col.names = c("**Variable**", "**Class**")
+  ) 
 
 ```
 
@@ -624,14 +898,38 @@ med_income <- ca_childcare |>
 
 ```{r}
 #| label: dvs-7-ex-1
-# haven't done this yet
+# Lab 9 Question 8 (Revised to make colors non-default)
+fish |>
+  map_int(~ sum(is.na(.x))) |>
+  enframe(name = "Measurement Variable", value = "Missing Values")|>
+  arrange(`Measurement Variable`) |>
+  gt() |>
+  tab_header(
+    title = "Number of Missing Values for Fish Measurements",
+    subtitle = "Data Collected from 1989 to 2006 on the Blackfoot Fish River in Montana"
+  ) |>
+  data_color(
+    columns = `Missing Values`,
+    fn = function(x) {
+      ifelse(
+        x == 0, "#00CD00",  
+        "#EE2C2C")
+    }
+  )
 ```
 
 -   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`)
 
 ```{r}
 #| label: dvs-7-ex-2
-# haven't done this yet
+# Lab 7 Question 2
+fish |>
+  summarise(across(everything(), ~sum(is.na(.x)))) |>
+  pivot_longer(
+    everything(),
+    names_to = "variable",
+    values_to = "number_of_missing_values") |>
+  filter(number_of_missing_values > 0)
 ```
 
 ## Program Efficiency
@@ -657,7 +955,7 @@ new_teacher_eval<- evals |>
 ```{r}
 #| label: pe-1-across
 # Lab 3 Question 5
-teacher_evals_clean <- evals |>
+evals |>
   rename(sex = gender)|>
   filter(no_participants >= 10)|>
   mutate(
@@ -672,7 +970,10 @@ teacher_evals_clean <- evals |>
 
 ```{r}
 #| label: pe-1-map-1
-# haven't done this yet
+# Lab 9 Question 7
+fish |>
+  map_int(~ sum(is.na(.x))) |>
+  enframe(name = "Variable", value = "Number of Missing Values")
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
@@ -681,21 +982,69 @@ teacher_evals_clean <- evals |>
 
 ```{r}
 #| label: pe-2-1
-# haven't done this yet
+# Lab 7 Question 4
+
+rescale_01 <- function(x){
+  
+  if (!is.numeric(x)) {
+    stop()
+  }
+  
+  if (length(x) <= 1) {
+    stop()
+  }
+
+  y <- range(x, na.rm = TRUE)
+  
+  x = (x -y[1]) / (y[2] - y[1])
+}
 ```
 
 -   Example 2: Function that operates on data frames
 
 ```{r}
 #| label: pe-2-2
-# haven't done this yet
+# Lab 8 Question 3
+plot_function <- function(df, x, y) {
+  
+  
+  ggplot(df, aes(x = {{ x }}, y = {{ y }}, color = {{ y }})) +
+    geom_point() +
+    labs(
+      x = str_replace_all(rlang::as_label(rlang::enquo(x)),  "_", " "),
+      y = str_replace_all(rlang::as_label(rlang::enquo(y)),  "_", " "),
+      title = paste("Relationship between",
+                    str_replace_all(rlang::as_label(rlang::enquo(x)),  "_", " "),
+                    "and",
+                    str_replace_all(rlang::as_label(rlang::enquo(y)),  "_", " ")),
+      color = str_replace_all(rlang::as_label(rlang::enquo(y)),  "_", " ")
+      )
+   
+}
 ```
 
 -   Example 3: Function that operates on vectors *or* data frames
 
 ```{r}
 #| label: pe-2-3
-# haven't done this yet
+# Lab 8 Question 4
+
+style_plot <- function(plot, theme_fn = theme_bw(), palette = RColorBrewer::brewer.pal(8, "Accent"), aesthetic = "fill") {
+  
+  if (!aesthetic %in% c("color", "fill")) {
+    stop()
+  }
+
+  styled_plot <- plot + theme_fn
+  
+  if (aesthetic == "color") {
+    styled_plot <- styled_plot + scale_color_manual(values = palette)
+  } else {
+    styled_plot <- styled_plot + scale_fill_manual(values = palette)
+  }
+  
+  return(styled_plot)
+}
 ```
 
 **PE-3:I can use iteration to reduce repetition in my code.**
@@ -704,30 +1053,42 @@ teacher_evals_clean <- evals |>
 
 ```{r}
 #| label: pe-3-across
-# Lab 3 Question 5
-teacher_evals_clean <- evals |>
-  rename(sex = gender)|>
-  filter(no_participants >= 10)|>
-  mutate(
-    teacher_id = as.character(teacher_id),
-    across(c(academic_degree, seniority, sex), as.factor)
-  )|>
-  select(course_id, teacher_id, question_no, no_participants, resp_share,
-         SET_score_avg, percent_failed_cur, academic_degree, seniority, sex)
+# Lab 8 Question 1
+rescale_01 <- function(x){
+  if (!is.numeric(x)) {
+    stop()}
+  if (length(x) <= 1) {
+    stop()}
+  y <- range(x, na.rm = TRUE)
+  x = (x -y[1]) / (y[2] - y[1])
+  }
+
+rescale_column <- function(df, cols) {
+  df |>
+    mutate(across({{ cols }}, rescale_01))
+  }
 ```
 
 -   using a `map()` function with **one** input (e.g., `map()`, `map_chr()`, `map_dbl()`, etc.)
 
 ```{r}
 #| label: pe-3-map-1
-# haven't done this yet
+#  Lab 10 Question 10
+funcdata <- map(.x = 1:1000,
+              .f = ~ mycifun(beta0 = 3,
+                             beta1 = 0.5,
+                             n = 100)
+              ) 
 ```
 
 -   using a `map()` function with **more than one** input (e.g., `map_2()` or `pmap()`)
 
 ```{r}
 #| label: pe-3-map-2
-# haven't done this yet
+# Lab 10 Question 1
+results <- map_int(.x = 1:10000,
+                   .f = ~ randomBabies(4)
+                  )
 ```
 
 **PE-4: I can use modern tools when carrying out my analysis.**
@@ -736,9 +1097,9 @@ teacher_evals_clean <- evals |>
 
 ```{r}
 #| label: pe-4-1
-# Lab 3 Question 8
+# Lab 3 Question 8 (Revised to update syntax)
 teacher_evals_clean |>
-  filter(if_any(everything(), is.na)) |>
+  filter(if_any(everything(), ~ is.na(.x))) |>
   select(teacher_id, course_id, everything())
 ```
 
@@ -746,38 +1107,27 @@ teacher_evals_clean |>
 
 ```{r}
 #| label: pe-4-2
-# Lab 4 Question 7 
-plot <- ca_childcare |>
-  pivot_longer(cols = c(mfcc_infant,
-                        mfcc_toddler,
-                        mfcc_preschool),
-              names_to = "age_group",
-              values_to = "price") |>
-  mutate(age_group = case_when(
-    age_group == "mfcc_infant" ~ "Infant",
-    age_group == "mfcc_toddler" ~ "Toddler",
-    age_group == "mfcc_preschool" ~ "Preschool"),
-    age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool")),
-    region = fct_reorder2(region, study_year, price))
-    
-
-
-ggplot(plot, mapping = aes(x = study_year, y = price, color = region))+
-  geom_point(alpha = 0.3, size = 1) + 
-  geom_smooth(
-    size = 0.8) +
-  facet_wrap(~ age_group, ncol = 3) +
+# Lab 10 Question 13
+binded |>
+  slice_sample(n = 100) |>
+  mutate(num = row_number()) |>
+  ggplot(aes(y = num)) +
+  geom_errorbarh(aes(xmin = ci_lower,
+                     xmax = ci_upper,
+                     color = population_slope),
+                 height = 0.3, linewidth = 0.5) +
+  geom_vline(xintercept = 0.5, linetype = "dashed") +  
+  scale_color_manual(values = c("TRUE" = "steelblue", "FALSE" = "red"),
+                     labels = c("TRUE" = "Contains β1", "FALSE" = "Misses β1"),
+                     name = "population slope = 0.5") +
   labs(
-    title = "Weekly Median Price for Center_based Childcare ($)",
-    x = "Study Year",
-    y = "",
-    color = "Region")+
-  theme(
-    plot.title = element_text(size = 10),
-    legend.title = element_text(size = 8),
-    legend.text = element_text(size = 6),
-    legend.position = "right",
-    aspect.ratio = 1)
+    title = "95% Confidence Intervals of Estimated Regression Slope
+for 100 Simulated Datasets",
+    subtitle = "Cl's that do not include the population slope are highlighted in red",
+    x = "Slope Coefficient Estimate",
+    y = ""
+  ) +
+  theme(legend.position = "top")
 ```
 
 ## Data Simulation & Statisical Models
@@ -788,14 +1138,48 @@ ggplot(plot, mapping = aes(x = study_year, y = price, color = region))+
 
 ```{r}
 #| label: dsm-1-1
-# haven't done this yet
+# Lab 10 Question 4
+
+intercept = 2
+slope = 1
+
+x = runif(100, min = 0, max = 1)
+
+ep = rnorm(100, mean = 0, sd = 1)
+
+y = intercept + x*slope + ep
+
+observed_data = tibble(x = x, y = y)
+
+observed_data
 ```
 
 -   Example 2
 
 ```{r}
 #| label: dsm-1-2
-# haven't done this yet
+# Lab 10 Question 8
+
+mycifun <- function(beta0, beta1, n) {
+  
+  x  <- runif(n, min = 0, max = 1)         
+  ep <- rnorm(n, mean = 0, sd = 1)         
+  y  <- beta0 + beta1 * x + ep       
+  
+  observed_data <- tibble(x = x, y = y)
+  
+  linear <- lm(y ~ x, data = observed_data)
+  
+  est <- tidy(linear, conf.int = TRUE) |>
+  filter(term == "x") 
+  
+  tibble(
+    slope_est       = est$estimate,
+    ci_lower        = est$conf.low,
+    ci_upper        = est$conf.high,
+    population_slope  = (beta1 >= ci_lower & beta1 <= ci_upper)
+  )
+}
 ```
 
 **DSSM-2: I can conduct common statistical analyses in R.**
@@ -832,12 +1216,20 @@ reg_mod1 <- lm(mfcc_infant ~ mhi_2018, data = ca_childcare)
 
 <!-- For the revisions included in your Portfolio, to help me understand the nature of your revisions, please denote somehow the feedback I provided you (e.g., boldface, italics, colored text) before your revisions. -->
 
+I took in feedback from both Dr. T's code rubric as well as code reviews from my peers, to revise my thinking throughout the course. I kept an open mind, and read articles relating to functions that I didn't really understand in class to understand how to write my code in the most effective and concise way. When doing revisions for my code, I try to figure out where my thought process went wrong while writing the code, and then revised my code according to the feedback I received. I listen to feedback and try to reflect what I learnt in future code, which I think is important to growing in this class.
+
 ## Extending My Thinking
 
 <!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
+
+I've extended my thinking in this class by reading other sources besides the ones provided to better understand certain functions used in the class, as well as try to incorporate what I learnt into future assignments, and trying to use feedback I get to make my code better than I thought it could be, using functions that I wasn't comforatable using yet.
 
 ## Peer Support & Collaboration
 
 <!-- Include an image or a description of feedback you gave that you are proud of (either in a peer review or in Discord). -->
 
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
+
+"I love that you included comments in your code chunks to describe what the code does! Your code is also very tidy. I would put the answers to the question right after it, before your code chunks that support your answer, it might make it easier to read." Was one of the reviews I was proud of, and that's because I felt like I was being a supportive peer while also giving some feedback, their code and the formatting of the code looked good to me, the only thing was where the answer went, because I think it's easier for readers to see an answer before seeing the explanation to understand the question better.
+
+Through the weekly programming activities, I grew as a collaborator by being able to better communicate my ideas as well as being a better listener and listening to other people's ideas. I've always been more used to the discussion type collaboration, but this way of collaborating really helped me understand the other person's thought process and I think I learnt a lot from it.

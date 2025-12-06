@@ -1,21 +1,33 @@
 ---
 title: "Lightening Round Essays"
-format: html
+author: "Scarlet Kwan"
+format: html 
+embed-resources: true
+layout: margin-left
 editor: visual
+execute: 
+  eval: false
+  echo: true
 ---
 
 **Answer each of the following questions with *one sentence* including a brief explanation.**
 
-1. Finish the sentence with another student’s name: "If [Name of Student] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
+1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
+    If Addie Weaver (from the other section) doesn't earn an A, then nobody should, because she spends a lot of time prepping for the class, reading the textbook and articles, and watching videos, to prepare herself for class.
 
-2. What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
 
+    Joins was a hard topic for me just because I found it difficult to visualize how my data was being joined together and it made me a little confused.
 
-3. What was the easiest part of the class for you? Explain why.
+3.  What was the easiest part of the class for you? Explain why.
 
+    Strings were the easiest part of the class for me, and I think it's because it's the type of code I'm the most used to.
 
-4. What part of the class surprised or interested you the most? Explain why.
+4.  What part of the class surprised or interested you the most? Explain why.
 
+    The practice activities are usually interesting, especially ones where they're more 'investigative', because I find that to be fun because I love playing detective games.
 
-5. Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+5.  Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+
+    I would tell them that it's okay to make mistakes in the class, that trial and error is a huge part of coding and it's completely fine to not get it the first try.
